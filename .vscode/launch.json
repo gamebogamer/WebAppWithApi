@@ -1,0 +1,49 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch WebApi",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/FirstApi/bin/Debug/net9.0/net9.0/FirstApi.dll",
+      "cwd": "${workspaceFolder}/FirstApi",
+      "stopAtEntry": false,
+      "preLaunchTask": "build",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+https://\\S+:([0-9]+)",
+        "uriFormat": "https://localhost:%s/swagger/index.html"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    {
+      "name": "Launch WebApp",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/FirstMvcWebApp/bin/Debug/net9.0/FirstMvcWebApp.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/FirstMvcWebApp",
+      "stopAtEntry": false,
+      "preLaunchTask": "build",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/FirstMvcWebApp/Views",
+        "/wwwroot": "${workspaceFolder}/FirstMvcWebApp/wwwroot"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Launch Both",
+      "configurations": ["Launch WebApi", "Launch WebApp"]
+    }
+  ]
+}

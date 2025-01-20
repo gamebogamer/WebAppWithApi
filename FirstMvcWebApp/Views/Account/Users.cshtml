@@ -1,0 +1,67 @@
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+@model IEnumerable<UserModel>
+
+<div>
+    <h2>@ViewData["Title"]</h2>
+    <table class="table">
+        @if (Model != null)
+        {
+            @foreach (UserModel user in (IEnumerable<UserModel>)Model)
+            {
+                <tr>
+                    <td>
+                        <a class="button" asp-route-id="@user.UserId" asp-controller="Account" asp-action="EditUser"  asp-area="" >
+                            Edit 
+                        </a>
+                        
+                    </td>
+                    <td>
+                        <a class="button" asp-route-UserId="@user.UserId" asp-controller="Account" asp-action="DeleteUser"  asp-area="" >
+                            Delete 
+                        </a>
+                    </td>
+                    <td>
+                        @user.UserId
+                    </td>
+                    <td>
+                        @user.UserName
+                    </td>
+                    <td>
+                        @user.PhoneNumber
+                    </td>
+                    <td>
+                        @user.UserType
+                    </td>
+                    <td>
+                        @user.Address
+                    </td>
+                    <td>
+                        @user.DateOfBirth
+                    </td>
+                    <td>
+                        @user.Hobby
+                    </td>
+                    <td>
+                        @user.Gender
+                    </td>
+                    <td>
+                        @user.CreatedDate
+                    </td>
+                    <td>
+                        @user.UpdateDate
+                    </td>
+                    <td>
+                        @user.Email
+                    </td>
+                    <td>
+                        @user.Status
+                    </td>
+                </tr>
+            }
+        }
+
+    </table>
+</div>
