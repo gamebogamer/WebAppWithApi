@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var isUserLoggedIn = TempData["IsLoggedIn"] != null && (bool)TempData["IsLoggedIn"] == true;
+}
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -27,16 +31,25 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home"
+                                asp-action="Privacy">Privacy</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="GetAllUsers">Users</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Account"
+                                asp-action="GetAllUsers">Users</a>
                         </li>
                     </ul>
                     <!-- Right-aligned Login and Signup links -->
                     <div class="d-flex align-items-center">
-                        <a class="btn btn-outline-primary me-2" asp-controller="Account" asp-action="Login">Login</a>
-                        <a class="btn btn-primary" asp-controller="Account" asp-action="Signup">Signup</a>
+                        @if (isUserLoggedIn)
+                        {
+                            <a class="btn btn-outline-primary me-2" asp-controller="Account" asp-action="Logout">Logout</a>
+                        }
+                        else
+                        {
+                            <a class="btn btn-outline-primary me-2" asp-controller="Account" asp-action="Login">Login</a>
+                            <a class="btn btn-primary" asp-controller="Account" asp-action="Signup">Signup</a>
+                        }
                     </div>
                 </div>
             </div>
@@ -58,7 +71,9 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
-    @{ await Html.RenderPartialAsync("_AlertMessages"); }
+    @{
+        await Html.RenderPartialAsync("_AlertMessages");
+    }
 
 </body>
 

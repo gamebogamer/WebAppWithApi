@@ -10,6 +10,8 @@ builder.Services.AddHttpClient("ApiClient", client =>
     
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddScoped<IAccountService,AccountService>();
 
 var app = builder.Build();

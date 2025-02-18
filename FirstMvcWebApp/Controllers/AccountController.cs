@@ -4,9 +4,9 @@ using FirstMvcWebApp.Interfaces;
 using FirstMvcWebApp.Models;
 using FirstMvcWebApp.Mappers;
 using FirstMvcWebApp.DTOs;
+using System.Threading.Tasks;
 
 namespace FirstMvcWebApp.Controllers;
-
 public class AccountController : Controller
 {
     private readonly IAccountService _accountService;
@@ -16,38 +16,56 @@ public class AccountController : Controller
         _accountService = accountService;
     }
 
-    // Renders the login view
+    [HttpGet]
     public IActionResult Login()
     {
         return View("Login");
     }
 
-    // Renders the sign-up view
-    public IActionResult SignUp()
+    [HttpPost]
+    public async Task<IActionResult> Login(LogInViewModel logInViewModel)
     {
-        return View("SignUp");
+        if (!ModelState.IsValid)
+        {
+            return View(logInViewModel);
+        }
+
+        var res = await _accountService.Login(logInViewModel);
+        if (res != null)
+        {
+            TempData["SuccessMessage"] = "User logged in successfully.";
+            TempData["IsLoggedIn"] = true;
+            return RedirectToAction(nameof(GetAllUsers));
+
+        }
+        else
+        {
+            TempData["ErrorMessage"] = "Failed to log in.";
+            return RedirectToAction(nameof(Login));
+        }
     }
 
-    // Renders the users view with an optional list of users
+    [HttpGet]
+    public async Task<IActionResult> Logout()
+    {
+        _accountService.Logout();
+        TempData["SuccessMessage"] = "User logged out successfully.";
+        TempData["IsLoggedIn"] = false;
+        return RedirectToAction(nameof(Login));
+    }
+
     public IActionResult Users()
     {
         return View("Users");
     }
 
-    // Fetches all users and displays them in the "Users" view
     [HttpGet]
     public async Task<IActionResult> GetAllUsers()
     {
-        if (!ModelState.IsValid)
-        {
-            return View("Users", new List<UserModel>()); // Return an empty view if the model is invalid
-        }
-
         var users = await _accountService.GetAllUsers();
         return View("Users", users);
     }
 
-    // Fetches a single user's details by ID and renders the "EditUser" view
     [HttpGet]
     public async Task<IActionResult> EditUser(int id)
     {
@@ -66,13 +84,17 @@ public class AccountController : Controller
         return View("EditUser", editViewModel);
     }
 
-    // Handles the sign-up logic
+    public IActionResult SignUp()
+    {
+        return View("SignUp");
+    }
+
     [HttpPost]
     public async Task<IActionResult> SignUp(SignUpViewModel signUpViewModel)
     {
         if (!ModelState.IsValid)
         {
-            return View(signUpViewModel); // Return the view with validation errors
+            return View(signUpViewModel);
         }
 
         var user = await _accountService.CreateUser(signUpViewModel);
@@ -80,7 +102,6 @@ public class AccountController : Controller
         return RedirectToAction(nameof(GetAllUsers));
     }
 
-    // Updates an existing user
     [HttpPost]
     public async Task<IActionResult> UpdateUser([FromQuery] string userId, EditViewModel editViewModel)
     {
@@ -90,13 +111,13 @@ public class AccountController : Controller
         }
         if (!editViewModel.UpdatePassword)
         {
-            // ModelState.Remove(nameof(editViewModel.Password));
-            // ModelState.Remove(nameof(editViewModel.ConfirmPassword));
+            ModelState.Remove(nameof(editViewModel.Password));
+            ModelState.Remove(nameof(editViewModel.ConfirmPassword));
         }
 
         if (!ModelState.IsValid)
         {
-            return View("EditUser", editViewModel); // Return to the edit view if validation fails
+            return View("EditUser", editViewModel);
         }
 
         var updatedUser = await _accountService.UpdateUser(id, editViewModel);
@@ -109,7 +130,6 @@ public class AccountController : Controller
         return RedirectToAction(nameof(GetAllUsers));
     }
 
-    // Deletes a user by ID
     [HttpGet]
     public async Task<IActionResult> DeleteUser([FromQuery] string userId)
     {

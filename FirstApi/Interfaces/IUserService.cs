@@ -6,4 +6,5 @@ public interface IUserService
     public Task<UserDto> CreateUserAsync(CreateUserRequestDTO createUserRequestDTO);
     public Task<UserDto> UpdateUserAsync(int id ,CreateUserRequestDTO createUserRequestDTO);
     public Task<UserDto> DeleteUserAsync(int id);
+    public Task<string> LogInAsync(LogInDTO logInDTO);
 }

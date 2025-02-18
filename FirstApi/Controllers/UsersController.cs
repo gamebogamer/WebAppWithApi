@@ -1,18 +1,68 @@
 using Microsoft.AspNetCore.Mvc;
 using FirstApi.DTOs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using FirstApi.Services;
 
 namespace FirstApi.Controllers
 {
+
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
 
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly JwtTokenServices _jwtTokenServices;
 
-        public UsersController(IUserService userService)
+        private const string JwtCookieName = "jwt";
+
+        public UsersController(IUserService userService, JwtTokenServices jwtTokenServices)
         {
             _userService = userService;
+            _jwtTokenServices = jwtTokenServices;
+        }
+
+        [HttpPost("{logInDTO}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> LogIn([FromBody] LogInDTO logInDTO)
+        {
+            if (logInDTO == null)
+            {
+                return BadRequest("Login data must be provided.");
+            }
+
+            try
+            {
+                string jwtToken = await _userService.LogInAsync(logInDTO);
+                if (jwtToken == null)
+                {
+                    return Unauthorized();
+                }
+                // return Ok(jwtToken);
+                Response.Cookies.Append("jwt", jwtToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true, // Ensure this is true in production (HTTPS only)
+                    SameSite = SameSiteMode.Strict, // Prevents CSRF
+                    Expires = DateTime.UtcNow.AddMinutes(60) // Match token expiry
+                });
+                return Ok(jwtToken);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (e.g., using ILogger)
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing your request.");
+            }
         }
 
         [HttpGet]
@@ -30,7 +80,7 @@ namespace FirstApi.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<UserDto>> GetUserById([FromRoute]int id)
+        public async Task<ActionResult<UserDto>> GetUserById([FromRoute] int id)
         {
             try
             {
@@ -48,6 +98,8 @@ namespace FirstApi.Controllers
         {
             try
             {
+                var PasswordHash = new PasswordHasher<CreateUserRequestDTO>().HashPassword(createUserRequestDTO, createUserRequestDTO.Password);
+                createUserRequestDTO.Password = PasswordHash;
                 var userDto = await _userService.CreateUserAsync(createUserRequestDTO);
                 return CreatedAtAction(nameof(GetUserById), new { id = userDto.UserId }, userDto);
             }
@@ -58,10 +110,12 @@ namespace FirstApi.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> EditUser([FromRoute]int id, [FromBody] CreateUserRequestDTO createUserRequestDTO)
+        public async Task<IActionResult> EditUser([FromRoute] int id, [FromBody] CreateUserRequestDTO createUserRequestDTO)
         {
             try
             {
+                var PasswordHash = new PasswordHasher<CreateUserRequestDTO>().HashPassword(createUserRequestDTO, createUserRequestDTO.Password);
+                createUserRequestDTO.Password = PasswordHash;
                 var userDto = await _userService.UpdateUserAsync(id, createUserRequestDTO);
                 return userDto == null ? NotFound() : Ok(userDto);
             }
@@ -72,7 +126,7 @@ namespace FirstApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser([FromRoute]int id)
+        public async Task<IActionResult> DeleteUser([FromRoute] int id)
         {
             try
             {

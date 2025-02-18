@@ -2,16 +2,22 @@ using FirstApi.Interfaces;
 using FirstApi.Models;
 using FirstApi.Mappers;
 using FirstApi.DTOs;
+using Microsoft.AspNetCore.Identity;
 
 namespace FirstApi.Services
 {
     public class UsersServices : IUserService
     {
         private readonly IUserRepository _userRepository;
-
-        public UsersServices(IUserRepository userRepository)
+        private readonly JwtTokenServices _jwtTokenServices;
+        private readonly IPasswordHasher<LogInDTO> _passwordHasher;
+        
+        public UsersServices(IUserRepository userRepository,JwtTokenServices jwtTokenServices,IPasswordHasher<LogInDTO> passwordHasher)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _jwtTokenServices = jwtTokenServices;
+            _passwordHasher = passwordHasher;
+            
         }
 
         public async Task<UserDto> CreateUserAsync(CreateUserRequestDTO createUserRequestDTO)
@@ -79,6 +85,34 @@ namespace FirstApi.Services
             UserDto userDto = deletedUser.ToUserDto();
 
             return userDto;
+        }
+
+        public async Task<string> LogInAsync(LogInDTO logInDTO)
+        {
+            if (logInDTO == null)
+            {
+                throw new ArgumentNullException(nameof(logInDTO));
+            }
+
+            if (string.IsNullOrWhiteSpace(logInDTO.UserName) || string.IsNullOrWhiteSpace(logInDTO.Password))
+            {
+                throw new ArgumentException("Username and password must be provided.");
+            }
+
+            User user = await _userRepository.GetUserByEmailAsync(logInDTO.UserName);
+            if (user == null)
+            {
+                throw new KeyNotFoundException($"User with email {logInDTO.UserName} not found.");
+            }
+
+            var result = _passwordHasher.VerifyHashedPassword(logInDTO, user.Password, logInDTO.Password);
+            if (result == PasswordVerificationResult.Failed)
+            {
+                throw new UnauthorizedAccessException("Invalid email or password.");
+            }
+
+            return _jwtTokenServices.GenerateJwtToken(user);
+
         }
     }
 }

@@ -5,16 +5,74 @@ using Newtonsoft.Json;
 using System.Text;
 using FirstMvcWebApp.Mappers;
 using FirstMvcWebApp.DTOs;
+using System.Net.Http.Headers;
 
 namespace FirstMvcWebApp.Services;
 
 public class AccountService : IAccountService
 {
     private readonly HttpClient _httpClient;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public AccountService(IHttpClientFactory httpClientFactory)
+    public AccountService(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
     {
+        _httpContextAccessor = httpContextAccessor;
         _httpClient = httpClientFactory.CreateClient("ApiClient");
+    }
+
+    private class TokenResponse
+    {
+        public string Token { get; set; }
+    }
+
+    public async Task<string> Login(LogInViewModel logInViewModel)
+    {
+        try
+        {
+
+            HttpResponseMessage response = await _httpClient.PostAsJsonAsync("Users/Login", logInViewModel);
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Failed to log in. Status: {response.StatusCode}");
+                return null; // Handle login failure
+            }
+
+            // Read the JWT token from the response
+            var responseJson = await response.Content.ReadAsStringAsync();
+            // var tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(responseJson);
+
+            // Store the token in a cookie (or session)
+            _httpContextAccessor.HttpContext.Response.Cookies.Append("jwt", responseJson, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true, // Ensure this is true in production (HTTPS only)
+                SameSite = SameSiteMode.Strict, // Prevents CSRF
+                Expires = DateTime.UtcNow.AddMinutes(60) // Match token expiry
+            });
+
+            var jwtToken = await response.Content.ReadAsStringAsync();
+            return jwtToken.ToString();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error logging in: {ex.Message}");
+            return null;
+        }
+    }
+
+    public void Logout()
+    {
+        try
+        {
+            // Remove the JWT token cookie
+            _httpContextAccessor.HttpContext.Response.Cookies.Delete("jwt");
+
+            Console.WriteLine("User logged out successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error logging out: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -25,6 +83,18 @@ public class AccountService : IAccountService
     {
         try
         {
+            // Retrieve the JWT token from the cookie
+            // Retrieve the token from cookies
+            var token = _httpContextAccessor.HttpContext.Request.Cookies["jwt"];
+            if (string.IsNullOrEmpty(token))
+            {
+                // return "Unauthorized: No token found";
+                return null;
+            }
+
+            // Set Authorization header
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             HttpResponseMessage response = await _httpClient.GetAsync("Users");
             if (response.IsSuccessStatusCode && (Convert.ToInt32(response.StatusCode) == 200))
             {
@@ -53,6 +123,16 @@ public class AccountService : IAccountService
     {
         try
         {
+            var token = _httpContextAccessor.HttpContext.Request.Cookies["jwt"];
+            if (string.IsNullOrEmpty(token))
+            {
+                // return "Unauthorized: No token found";
+                return null;
+            }
+
+            // Set Authorization header
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             HttpResponseMessage response = await _httpClient.GetAsync($"Users/{id}");
             if (response.IsSuccessStatusCode)
             {
@@ -115,6 +195,16 @@ public class AccountService : IAccountService
     {
         try
         {
+            var token = _httpContextAccessor.HttpContext.Request.Cookies["jwt"];
+            if (string.IsNullOrEmpty(token))
+            {
+                // return "Unauthorized: No token found";
+                return null;
+            }
+
+            // Set Authorization header
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             var editUserDto = editViewModel.ToUserDto();
             string json = JsonConvert.SerializeObject(editUserDto);
             HttpContent httpContent = new StringContent(json, Encoding.UTF8, "application/json");
@@ -148,6 +238,16 @@ public class AccountService : IAccountService
     {
         try
         {
+            var token = _httpContextAccessor.HttpContext.Request.Cookies["jwt"];
+            if (string.IsNullOrEmpty(token))
+            {
+                // return "Unauthorized: No token found";
+                return false;
+            }
+
+            // Set Authorization header
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             HttpResponseMessage response = await _httpClient.DeleteAsync($"Users/{id}");
             if (response.IsSuccessStatusCode)
             {

@@ -9,18 +9,65 @@
     <table class="table">
         @if (Model != null)
         {
+            <tr>
+                <th>
+                    Edit
+
+                </th>
+                <th>
+                    Delete
+                </th>
+                <th>
+                    UserId
+                </th>
+                <th>
+                    UserName
+                </th>
+                <th>
+                    PhoneNumber
+                </th>
+                <th>
+                    UserType
+                </th>
+                <th>
+                    Address
+                </th>
+                <th>
+                    DateOfBirth
+                </th>
+                <th>
+                    Hobby
+                </th>
+                <th>
+                    Gender
+                </th>
+                <th>
+                    CreatedDate
+                </th>
+                <th>
+                    UpdateDate
+                </th>
+                <th>
+                    Email
+                </th>
+                <th>
+                    Status
+                </th>
+            </tr>
             @foreach (UserModel user in (IEnumerable<UserModel>)Model)
             {
                 <tr>
                     <td>
-                        <a class="button" asp-route-id="@user.UserId" asp-controller="Account" asp-action="EditUser"  asp-area="" >
-                            Edit 
+                        <a class="button" asp-route-id="@user.UserId" asp-controller="Account" asp-action="EditUser"
+                            asp-area="">
+                            Edit
                         </a>
-                        
+
                     </td>
                     <td>
-                        <a class="button" asp-route-UserId="@user.UserId" asp-controller="Account" asp-action="DeleteUser"  asp-area="" >
-                            Delete 
+                        <a class="button" asp-route-UserId="@user.UserId" asp-controller="Account" asp-action="DeleteUser"
+                            asp-area="">
+                            Delete
                         </a>
                     </td>
                     <td>
