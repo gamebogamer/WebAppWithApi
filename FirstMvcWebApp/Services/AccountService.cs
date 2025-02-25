@@ -37,17 +37,16 @@ public class AccountService : IAccountService
                 return null; // Handle login failure
             }
 
-            // Read the JWT token from the response
+            // Read the response content only once
             var responseJson = await response.Content.ReadAsStringAsync();
-            // var tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(responseJson);
 
-            // Store the token in a cookie (or session)
+            // Store the token in a cookie
             _httpContextAccessor.HttpContext.Response.Cookies.Append("jwt", responseJson, new CookieOptions
             {
-                HttpOnly = true,
-                Secure = true, // Ensure this is true in production (HTTPS only)
-                SameSite = SameSiteMode.Strict, // Prevents CSRF
-                Expires = DateTime.UtcNow.AddMinutes(60) // Match token expiry
+                HttpOnly = true,  // Prevents JavaScript access (mitigates XSS attacks)
+                Secure = true,    // Ensures cookie is sent only over HTTPS (important in production)
+                SameSite = SameSiteMode.Lax, // Allows the cookie to be sent in cross-site requests
+                Expires = DateTime.UtcNow.AddMinutes(480) // Set the cookie expiration time
             });
 
             var jwtToken = await response.Content.ReadAsStringAsync();
@@ -75,28 +74,13 @@ public class AccountService : IAccountService
         }
     }
 
-    /// <summary>
-    /// Fetches all users from the API.
-    /// </summary>
-    /// <returns>List of users.</returns>
+
     public async Task<List<UserModel>> GetAllUsers()
     {
         try
         {
-            // Retrieve the JWT token from the cookie
-            // Retrieve the token from cookies
-            var token = _httpContextAccessor.HttpContext.Request.Cookies["jwt"];
-            if (string.IsNullOrEmpty(token))
-            {
-                // return "Unauthorized: No token found";
-                return null;
-            }
-
-            // Set Authorization header
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
             HttpResponseMessage response = await _httpClient.GetAsync("Users");
-            if (response.IsSuccessStatusCode && (Convert.ToInt32(response.StatusCode) == 200))
+            if (response.IsSuccessStatusCode)
             {
                 var users = await response.Content.ReadFromJsonAsync<List<UserModel>>();
                 return users ?? new List<UserModel>();
@@ -113,6 +97,46 @@ public class AccountService : IAccountService
             return new List<UserModel>();
         }
     }
+
+
+    // /// <summary>
+    // /// Fetches all users from the API.
+    // /// </summary>
+    // /// <returns>List of users.</returns>
+    // public async Task<List<UserModel>> GetAllUsers()
+    // {
+    //     try
+    //     {
+    //         // Retrieve the JWT token from the cookie
+    //         // Retrieve the token from cookies
+    //         var token = _httpContextAccessor.HttpContext.Request.Cookies["jwt"];
+    //         if (string.IsNullOrEmpty(token))
+    //         {
+    //             // return "Unauthorized: No token found";
+    //             return null;
+    //         }
+
+    //         // Set Authorization header
+    //         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+    //         HttpResponseMessage response = await _httpClient.GetAsync("Users");
+    //         if (response.IsSuccessStatusCode && (Convert.ToInt32(response.StatusCode) == 200))
+    //         {
+    //             var users = await response.Content.ReadFromJsonAsync<List<UserModel>>();
+    //             return users ?? new List<UserModel>();
+    //         }
+    //         else
+    //         {
+    //             Console.WriteLine($"Failed to fetch users. Status: {response.StatusCode}");
+    //             return new List<UserModel>();
+    //         }
+    //     }
+    //     catch (HttpRequestException ex)
+    //     {
+    //         Console.WriteLine($"Error fetching users: {ex.Message}");
+    //         return new List<UserModel>();
+    //     }
+    // }
 
     /// <summary>
     /// Fetches a single user by ID from the API.

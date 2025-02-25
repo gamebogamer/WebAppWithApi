@@ -11,46 +11,53 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//Add Jwt Authentication
+// Retrieve JWT settings from configuration
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = Encoding.ASCII.GetBytes(jwtSettings["SecretKey"]);
 
-builder.Services.AddAuthentication(Options=>{
-    Options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    Options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(Options=>{
-    // Options.RequireHttpsMetadata = false;
-    // Options.SaveToken = true;
-    Options.TokenValidationParameters = new TokenValidationParameters
+// Add JWT Authentication middleware
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = false,
-        ValidateAudience = false,
+        ValidateIssuer = true,
+        ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer=jwtSettings["Issuer"],
-        ValidAudience=jwtSettings["Audience"],
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(secretKey)
     };
 });
 
-// Add services to the container.
+// Add MVC controllers support
 builder.Services.AddControllers();
 
+// Enable API documentation generation
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<MyDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Configure database connection with PostgreSQL
+builder.Services.AddDbContext<MyDbContext>(options => 
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Register repository and service dependencies for dependency injection
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UsersServices>();
 builder.Services.AddSingleton<IPasswordHasher<LogInDTO>, PasswordHasher<LogInDTO>>();
-builder.Services.AddScoped<JwtTokenServices,JwtTokenServices>(); 
+builder.Services.AddScoped<JwtTokenServices, JwtTokenServices>();
 
 var app = builder.Build();
 
+// Enable authentication and authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Apply database migrations at application startup
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -58,14 +65,18 @@ using (var scope = app.Services.CreateScope())
     context.Database.Migrate();
 }
 
-// Configure the HTTP request pipeline.
+// Configure middleware pipeline for development environment
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// Enable HTTPS redirection
 app.UseHttpsRedirection();
+
+// Map API controllers
 app.MapControllers();
 
+// Run the application
 app.Run();

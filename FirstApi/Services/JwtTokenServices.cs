@@ -27,6 +27,8 @@ namespace FirstApi.Services
                 new Claim(ClaimTypes.Email, user.Email),
             }),
                 Expires = DateTime.UtcNow.AddHours(Convert.ToDouble(jwtSettings["AccessTokenExpiration"])),
+                Issuer = jwtSettings["Issuer"],
+                Audience = jwtSettings["Audience"],
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(secretKey), SecurityAlgorithms.HmacSha256Signature)
             };
 

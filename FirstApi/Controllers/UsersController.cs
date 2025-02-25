@@ -40,14 +40,6 @@ namespace FirstApi.Controllers
                 {
                     return Unauthorized();
                 }
-                // return Ok(jwtToken);
-                Response.Cookies.Append("jwt", jwtToken, new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = true, // Ensure this is true in production (HTTPS only)
-                    SameSite = SameSiteMode.Strict, // Prevents CSRF
-                    Expires = DateTime.UtcNow.AddMinutes(60) // Match token expiry
-                });
                 return Ok(jwtToken);
             }
             catch (KeyNotFoundException ex)

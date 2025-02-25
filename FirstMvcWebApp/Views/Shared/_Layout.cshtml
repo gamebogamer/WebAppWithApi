@@ -1,5 +1,5 @@
 ﻿@{
-    var isUserLoggedIn = TempData["IsLoggedIn"] != null && (bool)TempData["IsLoggedIn"] == true;
+    var isUserLoggedIn = Context.Session.GetString("IsLoggedIn") != null && bool.Parse(Context.Session.GetString("IsLoggedIn"));
 }
 
 <!DOCTYPE html>

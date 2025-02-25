@@ -33,8 +33,9 @@ public class AccountController : Controller
         var res = await _accountService.Login(logInViewModel);
         if (res != null)
         {
+            // Store IsLoggedIn true in session
+            HttpContext.Session.SetString("IsLoggedIn", "true");       // Mark as Logged In
             TempData["SuccessMessage"] = "User logged in successfully.";
-            TempData["IsLoggedIn"] = true;
             return RedirectToAction(nameof(GetAllUsers));
 
         }
@@ -50,7 +51,7 @@ public class AccountController : Controller
     {
         _accountService.Logout();
         TempData["SuccessMessage"] = "User logged out successfully.";
-        TempData["IsLoggedIn"] = false;
+        HttpContext.Session.SetString("IsLoggedIn", "false");       // Mark as Logged Out
         return RedirectToAction(nameof(Login));
     }
 
