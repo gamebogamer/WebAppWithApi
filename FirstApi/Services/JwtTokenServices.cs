@@ -24,8 +24,9 @@ namespace FirstApi.Services
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                new Claim(ClaimTypes.Email, user.Email),
-            }),
+                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim("UserId", user.UserId.ToString()), // Custom claim for UserId
+                }),
                 Expires = DateTime.UtcNow.AddHours(Convert.ToDouble(jwtSettings["AccessTokenExpiration"])),
                 Issuer = jwtSettings["Issuer"],
                 Audience = jwtSettings["Audience"],

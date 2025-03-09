@@ -12,5 +12,5 @@ public interface IAccountService
     public Task<UserDto> UpdateUser(int id, EditViewModel editViewModel);
     public Task<bool> DeleteUser(int UserId);
     public Task<string> Login(LogInViewModel logInViewModel);
-    public void Logout();
+     public Task Logout();
 }

@@ -59,10 +59,12 @@ public class AccountService : IAccountService
         }
     }
 
-    public void Logout()
+    public async Task Logout()
     {
         try
         {
+            HttpResponseMessage response = await _httpClient.PostAsync("Users/LogOut", null);
+
             // Remove the JWT token cookie
             _httpContextAccessor.HttpContext.Response.Cookies.Delete("jwt");
 

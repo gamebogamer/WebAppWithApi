@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using FirstMvcWebApp.Models;
 
 namespace FirstMvcWebApp.Controllers;
-
+[CheckSession]
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;

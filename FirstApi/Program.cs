@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Identity;
 using System.Text;
+// using FirstApi.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,22 +49,18 @@ builder.Services.AddDbContext<MyDbContext>(options =>
 // Register repository and service dependencies for dependency injection
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UsersServices>();
+builder.Services.AddScoped<IActiveTokenRepository, ActiveTokenRepository>();
 builder.Services.AddSingleton<IPasswordHasher<LogInDTO>, PasswordHasher<LogInDTO>>();
 builder.Services.AddScoped<JwtTokenServices, JwtTokenServices>();
+// builder.Services.AddScoped<IActiveTokenServices,ActiveTokenServices>();
 
 var app = builder.Build();
 
 // Enable authentication and authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
+// app.UseActiveTokenMiddleware();
 
-// Apply database migrations at application startup
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<MyDbContext>();
-    context.Database.Migrate();
-}
 
 // Configure middleware pipeline for development environment
 if (app.Environment.IsDevelopment())

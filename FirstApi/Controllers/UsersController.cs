@@ -7,7 +7,8 @@ using FirstApi.Services;
 namespace FirstApi.Controllers
 {
 
-    [Authorize]
+    // [Authorize]
+    [CustomAuthorize]
     [ApiController]
     [Route("api/[controller]")]
 
@@ -57,11 +58,45 @@ namespace FirstApi.Controllers
             }
         }
 
+        [HttpPost("logout")]
+        public async Task<IActionResult> LogOut()
+        {
+            try
+            {
+                var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
+                if (userIdClaim == null) return Unauthorized("UserId not found in token.");
+
+                int userId = int.Parse(userIdClaim.Value);
+
+                UserDto userDto = await _userService.GetUserByIdAsync(userId);
+                if (userDto == null) return NotFound("User not found.");
+
+                await _userService.LogOutAsync(userId);
+
+                // string jwtToken = Request.Cookies[JwtCookieName];
+                // if (jwtToken == null)
+                // {
+                //     return BadRequest("No JWT token found in the request.");
+                // }
+
+                // await _userService.LogOutAsync(jwtToken);
+                return Ok("Logged out successfully.");
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (e.g., using ILogger)
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing your request.");
+            }
+        }
+
         [HttpGet]
         public async Task<ActionResult<List<UserDto>>> GetUsers()
         {
             try
             {
+                var userId = HttpContext.Items["UserId"] as string;
+                var email = HttpContext.Items["Email"] as string;
+                var IsLogIn = HttpContext.Items["IsLogIn"] as bool?;
                 var userDtos = await _userService.GetAllUsersAsync();
                 return userDtos == null || !userDtos.Any() ? NoContent() : Ok(userDtos);
             }
@@ -86,6 +121,7 @@ namespace FirstApi.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> AddUser([FromBody] CreateUserRequestDTO createUserRequestDTO)
         {
             try

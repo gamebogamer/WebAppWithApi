@@ -1,12 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using FirstMvcWebApp.ViewModel;
 using FirstMvcWebApp.Interfaces;
-using FirstMvcWebApp.Models;
 using FirstMvcWebApp.Mappers;
-using FirstMvcWebApp.DTOs;
-using System.Threading.Tasks;
 
 namespace FirstMvcWebApp.Controllers;
+
+[CheckSession]
 public class AccountController : Controller
 {
     private readonly IAccountService _accountService;
@@ -33,11 +32,10 @@ public class AccountController : Controller
         var res = await _accountService.Login(logInViewModel);
         if (res != null)
         {
-            // Store IsLoggedIn true in session
+            // Store IsLoggedIn true in session 
             HttpContext.Session.SetString("IsLoggedIn", "true");       // Mark as Logged In
             TempData["SuccessMessage"] = "User logged in successfully.";
             return RedirectToAction(nameof(GetAllUsers));
-
         }
         else
         {
@@ -49,7 +47,7 @@ public class AccountController : Controller
     [HttpGet]
     public async Task<IActionResult> Logout()
     {
-        _accountService.Logout();
+        await _accountService.Logout();
         TempData["SuccessMessage"] = "User logged out successfully.";
         HttpContext.Session.SetString("IsLoggedIn", "false");       // Mark as Logged Out
         return RedirectToAction(nameof(Login));

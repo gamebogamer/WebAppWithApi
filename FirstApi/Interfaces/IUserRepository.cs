@@ -1,5 +1,5 @@
 using FirstApi.Models;
-namespace FirstApi.Interfaces 
+namespace FirstApi.Interfaces
 {
     public interface IUserRepository
     {
@@ -9,5 +9,7 @@ namespace FirstApi.Interfaces
         public Task<User> CreateUserAsync(User user);
         public Task<User> EditUserAsync(int id, User user);
         public Task<User> DeleteUserAsync(int id);
-    }    
+        // public Task<ActiveToken> AddToActiveTokens(ActiveToken activeToken);
+        // public Task<ActiveToken> GetActiveTokenByUserIdAsync(int userId);
+    }
 }
