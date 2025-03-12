@@ -52,6 +52,8 @@ builder.Services.AddScoped<IUserService, UsersServices>();
 builder.Services.AddScoped<IActiveTokenRepository, ActiveTokenRepository>();
 builder.Services.AddSingleton<IPasswordHasher<LogInDTO>, PasswordHasher<LogInDTO>>();
 builder.Services.AddScoped<JwtTokenServices, JwtTokenServices>();
+builder.Services.AddScoped<ILogger<CustomAuthorizeAttribute>, Logger<CustomAuthorizeAttribute>>();
+
 // builder.Services.AddScoped<IActiveTokenServices,ActiveTokenServices>();
 
 var app = builder.Build();

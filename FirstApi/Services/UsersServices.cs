@@ -138,7 +138,7 @@ namespace FirstApi.Services
 
             if (activeToken.TokenExpiryAtUtc < DateTime.UtcNow)
             {
-                await _activeTokenRepository.DeleteActiveTokenAsync(userId);
+                await _activeTokenRepository.DeleteActiveTokenAsync(activeToken.ActiveTokenId);
                 // throw new UnauthorizedAccessException("Token expired.");
             }
 

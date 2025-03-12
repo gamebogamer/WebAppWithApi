@@ -35,12 +35,12 @@ public class ActiveTokenRepository : IActiveTokenRepository
         return activeToken;                            
     }
 
-    public async Task DeleteActiveTokenAsync(int id)
+    public async Task DeleteActiveTokenAsync(int activeTokenId)
     {
-        ActiveToken? activeToken = await _context.ActiveTokens.FirstOrDefaultAsync(l => l.UserId == id);
+        ActiveToken? activeToken = await _context.ActiveTokens.FirstOrDefaultAsync(l => l.ActiveTokenId == activeTokenId);
         if (activeToken == null)
         {
-            throw new KeyNotFoundException($"ActiveToken with id {id} not found.");
+            throw new KeyNotFoundException($"ActiveToken with activeTokenId {activeTokenId} not found.");
         }
         _context.ActiveTokens.Remove(activeToken);
         await _context.SaveChangesAsync();
