@@ -4,11 +4,11 @@ using FirstMvcWebApp.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure HTTP client for API calls
+var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"];
 builder.Services.AddHttpClient("ApiClient", client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7102/api/"); // Replace with your actual API URL
-});
-    
+    client.BaseAddress = new Uri(apiBaseUrl); // Replace with your actual API URL
+}).AddHttpMessageHandler<JwtHttpClientHandler>(); // Register custom handler
 // Add MVC controllers with views
 builder.Services.AddControllersWithViews();
 
@@ -17,9 +17,6 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddTransient<JwtHttpClientHandler>();  // Register custom handler
 
-// Configure HttpClient with the custom handler
-builder.Services.AddHttpClient("ApiClient")
-    .AddHttpMessageHandler<JwtHttpClientHandler>();
 
 // Register AccountService with dependency injection
 builder.Services.AddScoped<IAccountService, AccountService>();
